@@ -49,7 +49,7 @@ func trace(err error) slog.Value {
 
 	if frames != nil {
 		groupValues = append(groupValues,
-			slog.Any("trace", frames),
+			slog.Any("call_stack", frames),
 		)
 	}
 

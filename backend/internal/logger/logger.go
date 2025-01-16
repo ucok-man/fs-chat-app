@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"runtime"
+	"time"
 )
 
 type option func(l *Logger)
 
-func WithLevel(lvl level) option {
+func WithLevel(lvl Level) option {
 	return func(l *Logger) {
 		l.minlvl = lvl
 	}
@@ -17,9 +20,11 @@ func WithLevel(lvl level) option {
 
 type Logger struct {
 	logger *slog.Logger
-	minlvl level
+	minlvl Level
 	ctx    struct {
-		level level
+		skipC int
+		trace slog.Attr
+		level Level
 		attrs []slog.Attr
 		msg   string
 	}
@@ -40,6 +45,11 @@ func New(opts ...option) *Logger {
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			a = parselevel(a)
 			a = parsetrace(a)
+			// parse source
+			if a.Key == slog.SourceKey {
+				source := a.Value.Any().(*slog.Source)
+				source.File = filepath.Base(source.File)
+			}
 			return a
 		},
 	}
@@ -49,9 +59,15 @@ func New(opts ...option) *Logger {
 
 }
 
+func (l *Logger) SetDefault() {
+	slog.SetDefault(l.logger)
+}
+
 func (l *Logger) resetCtx() {
 	l.ctx.attrs = []slog.Attr{}
 	l.ctx.msg = ""
+	l.ctx.trace = slog.Attr{}
+	l.ctx.skipC = 0
 }
 
 func (l *Logger) Info(format string, a ...any) *Logger {
@@ -63,14 +79,14 @@ func (l *Logger) Info(format string, a ...any) *Logger {
 func (l *Logger) Error(err error) *Logger {
 	l.ctx.msg = err.Error()
 	l.ctx.level = LevelError
-	l.Attr("trace", err)
+	l.ctx.trace = slog.Any("trace", err)
 	return l
 }
 
 func (l *Logger) Fatal(err error) *Logger {
 	l.ctx.msg = err.Error()
 	l.ctx.level = LevelFatal
-	l.Attr("trace", err)
+	l.ctx.trace = slog.Any("trace", err)
 	return l
 }
 
@@ -79,7 +95,16 @@ func (l *Logger) Attr(key string, value any) *Logger {
 	return l
 }
 
+func (l *Logger) SkipC(skip int) *Logger {
+	l.ctx.skipC = skip
+	return l
+}
+
 func (l *Logger) Send() {
-	l.logger.LogAttrs(context.Background(), l.ctx.level.Level(), l.ctx.msg, l.ctx.attrs...)
+	var pcs [1]uintptr
+	runtime.Callers(l.ctx.skipC, pcs[:])
+	l.ctx.attrs = append(l.ctx.attrs, l.ctx.trace)
+	record := slog.NewRecord(time.Now(), l.ctx.level.Level(), l.ctx.msg, pcs[0])
+	l.logger.Handler().WithAttrs(l.ctx.attrs).Handle(context.Background(), record)
 	l.resetCtx()
 }

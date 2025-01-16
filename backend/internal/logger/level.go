@@ -4,19 +4,19 @@ import (
 	"log/slog"
 )
 
-type level int
+type Level int
 
 const (
-	LevelInfo  = level(10)
-	LevelError = level(11)
-	LevelFatal = level(12)
+	LevelInfo  = Level(10)
+	LevelError = Level(11)
+	LevelFatal = Level(12)
 )
 
-func (l level) Level() slog.Level {
+func (l Level) Level() slog.Level {
 	return slog.Level(l)
 }
 
-func levelToString(l level) string {
+func levelToString(l Level) string {
 	switch l {
 	case 10:
 		return "INFO"
@@ -35,7 +35,7 @@ func parselevel(a slog.Attr) slog.Attr {
 	}
 
 	sloglevel := a.Value.Any().(slog.Level)
-	lvl := level(sloglevel.Level())
+	lvl := Level(sloglevel.Level())
 	a.Value = slog.StringValue(levelToString(lvl))
 	return a
 }

@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -43,4 +44,38 @@ func (m UserModel) Insert(user *User) error {
 	}
 
 	return nil
+}
+
+func (m UserModel) GetByEmail(email string) (*User, error) {
+	query := `
+		SELECT id, fullname, email, password_hash, profile_pic, created_at, updated_at
+		FROM users
+		WHERE email = $1
+		`
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.FullName,
+		&user.Email,
+		&user.Password.hash,
+		&user.ProfilePic,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
 }

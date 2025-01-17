@@ -51,7 +51,7 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.AddCookie(&http.Cookie{
+	http.SetCookie(w, &http.Cookie{
 		Name:     "jwttoken",
 		HttpOnly: true, // Ensures the cookie is not accessible via JavaScript
 		SameSite: http.SameSiteStrictMode,

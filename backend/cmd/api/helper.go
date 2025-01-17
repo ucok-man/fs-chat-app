@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type envelope map[string]any
@@ -96,13 +98,26 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 	return nil
 }
 
+func (app *application) generateToken(userID string) (string, error) {
+	var claim = struct {
+		Uid string `json:"uid"`
+		jwt.RegisteredClaims
+	}{
+		Uid: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
+	return token.SignedString([]byte(app.config.jwt.secret))
+}
+
 func (app *application) background(fn func()) {
 	app.wg.Add(1)
 
 	go func() {
-
 		defer app.wg.Done()
-
 		defer func() {
 			if err := recover(); err != nil {
 				app.logger.Error(fmt.Errorf("%s", err)).Send()

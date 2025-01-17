@@ -25,6 +25,7 @@ DB_MAX_OPEN_CONN ?= 25
 DB_MAX_IDLE_CONN ?= 25
 DB_MAX_IDLE_TIME ?= 15m
 TRUSTED_ORIGINS ?= ""
+JWT_SECRET ?="secret"
 MIGRATION_DIR ?= "migrations"
 
 FLAGS=\
@@ -35,7 +36,8 @@ FLAGS=\
 	--db-max-open-conns=${DB_MAX_OPEN_CONN} \
 	--db-max-idle-conns=${DB_MAX_IDLE_CONN} \
 	--db-max-idle-time=${DB_MAX_IDLE_TIME} \
-	--cors-trusted-origins=${TRUSTED_ORIGINS}
+	--cors-trusted-origins=${TRUSTED_ORIGINS} \
+	--jwt-secret=${JWT_SECRET}
 
 
 ## run/dev: compile and run application in watch mode
@@ -68,20 +70,20 @@ GOOSE_CFG=\
 migrate/new:
 	@${GOOSE_CFG} goose create ${name} sql
 
-## migrate/up: run up migration
+## migrate/up: run all up migration
 .PHONY: migrate/up
 migrate/up:
 	@${GOOSE_CFG} goose up
 
-## migrate/down: roll back migration by 1
+## migrate/down: roll back all down migration
 .PHONY: migrate/down
 migrate/down:
-	@${GOOSE_CFG} goose down
-
-## migrate/reset: roll back all migration
-.PHONY: migrate/reset
-migrate/reset:
 	@${GOOSE_CFG} goose reset
+
+## migrate/back: roll back migration by 1
+.PHONY: migrate/back
+migrate/back:
+	@${GOOSE_CFG} goose down
 
 ## migrate/version: show current active migration
 .PHONY: migrate/version

@@ -3,33 +3,28 @@ package main
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/cors"
 )
 
-const BASE_PATH = "/api/v1"
-
 func (app *application) routes() http.Handler {
-	router := chi.NewRouter()
-	router.NotFound(http.HandlerFunc(app.errNotFoundResponse))
-	router.MethodNotAllowed(http.HandlerFunc(app.errMethodNotAllowedResponse))
+	apiv1 := chi.NewRouter()
+	apiv1.NotFound(http.HandlerFunc(app.errNotFoundResponse))
+	apiv1.MethodNotAllowed(http.HandlerFunc(app.errMethodNotAllowedResponse))
 
-	// Basic Middleware
-	router.Use(middleware.Recoverer)
-	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   app.config.cors.trustedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type", "Access-Control-Request-Method"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
-		// Caching duration for preflight requests (in seconds)
-		MaxAge: 60,
-	}))
+	apiv1.Get("/healthcheck", app.healthcheckHandler)
 
-	apirouter := chi.NewRouter()
-	apirouter.Get("/healthcheck", app.healthcheckHandler)
+	// public routes
+	apiv1.Group(func(r chi.Router) {
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/signup", app.signup)
+			r.Post("/signin", app.signin)
+			r.Post("/logout", app.logout)
+		})
+	})
 
-	router.Mount("/api/v1", apirouter)
+	// private routes
+
+	router := chi.NewRouter().With(app.recover, app.cors)
+	router.Mount("/api/v1", apiv1)
 	return router
 }

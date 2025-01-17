@@ -26,6 +26,9 @@ type config struct {
 	cors struct {
 		trustedOrigins []string
 	}
+	jwt struct {
+		secret string
+	}
 }
 
 // configuration - initialize and validate config.
@@ -61,6 +64,7 @@ func configuration() (config, map[string]string) {
 	})
 
 	p.StringSliceVar(&cfg.cors.trustedOrigins, "cors-trusted-origins", []string{}, "Trusted CORS origins (comma separated)")
+	p.StringVar(&cfg.jwt.secret, "jwt-secret", "", "JWT token secret")
 
 	p.AddGoFlagSet(g)
 	p.Parse(os.Args[1:])
@@ -81,4 +85,5 @@ func validateConfig(v *validator.Validator, cfg *config) {
 	v.Check(cfg.db.maxOpenConns > 0, "db-max-open-conns", "must be positive number")
 	v.Check(cfg.db.maxIdleConns > 0, "db-max-idle-conns", "must be positive number")
 	v.Check(validator.PermittedValue(cfg.log.level, logger.LevelError, logger.LevelFatal, logger.LevelInfo), "log-level", "invalid log level value")
+	v.Check(cfg.jwt.secret != "", "jwt-secret", "jwt secret key is required")
 }

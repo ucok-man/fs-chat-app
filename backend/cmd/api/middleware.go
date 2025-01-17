@@ -1,19 +1,24 @@
 package main
 
-// import (
-// 	"fmt"
-// 	"net/http"
-// )
+import (
+	"net/http"
 
-// func (app *application) recoverPanic(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+)
 
-// 		defer func() {
-// 			if err := recover(); err != nil {
-// 				w.Header().Set("Connection:", "close")
-// 				app.errServerResponse(w, r, fmt.Errorf("%s", err))
-// 			}
-// 		}()
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
+func (app *application) recover(next http.Handler) http.Handler {
+	return middleware.Recoverer(next)
+}
+
+func (app *application) cors(next http.Handler) http.Handler {
+	return cors.Handler(cors.Options{
+		AllowedOrigins:   app.config.cors.trustedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "Access-Control-Request-Method"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		// Caching duration for preflight requests (in seconds)
+		MaxAge: 60,
+	})(next)
+}

@@ -2,12 +2,12 @@ package dto
 
 import "github.com/ucok-man/fs-chat-app-backend/internal/validator"
 
-type UserReqSignin struct {
+type ReqSigninDto struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func (dto *UserReqSignin) Validate() map[string]string {
+func (dto *ReqSigninDto) Validate() map[string]string {
 	v := validator.New()
 
 	validateEmail(v, dto.Email)

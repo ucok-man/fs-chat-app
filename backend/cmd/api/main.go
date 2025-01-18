@@ -7,6 +7,7 @@ import (
 
 	"github.com/ucok-man/fs-chat-app-backend/internal/data"
 	"github.com/ucok-man/fs-chat-app-backend/internal/logger"
+	"github.com/ucok-man/fs-chat-app-backend/internal/media"
 )
 
 const version = "1.0.0"
@@ -15,6 +16,7 @@ type application struct {
 	config config
 	logger *logger.Logger
 	models data.Models
+	media  *media.Media
 	wg     sync.WaitGroup
 }
 
@@ -35,9 +37,16 @@ func main() {
 	}
 	defer db.Close()
 
+	media, err := media.New(cfg.cloudinary.url)
+	if err != nil {
+		l.Fatal(err).Attr("meta", "error opening database connection").Send()
+		os.Exit(1)
+	}
+
 	app := &application{
 		config: cfg,
 		logger: logger.New(logger.WithLevel(cfg.log.level)),
+		media:  media,
 		models: data.NewModels(db),
 	}
 

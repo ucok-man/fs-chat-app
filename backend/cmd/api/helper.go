@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/ucok-man/fs-chat-app-backend/internal/validator"
 )
 
 type envelope map[string]any
@@ -98,11 +100,13 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 	return nil
 }
 
+type JwtTokenClaim struct {
+	Uid string `json:"uid"`
+	jwt.RegisteredClaims
+}
+
 func (app *application) generateToken(userID string) (string, error) {
-	var claim = struct {
-		Uid string `json:"uid"`
-		jwt.RegisteredClaims
-	}{
+	var claim = JwtTokenClaim{
 		Uid: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
@@ -126,4 +130,34 @@ func (app *application) background(fn func()) {
 
 		fn()
 	}()
+}
+
+const filesize = 10 << 20 // 10mb
+var safeImgFormat = []string{
+	"image/jpg",
+	"image/jpeg",
+	"image/png",
+	"image/webp",
+}
+
+func (app *application) readImageFile(r *http.Request, key string) (*multipart.FileHeader, error) {
+	if err := r.ParseMultipartForm(filesize); err != nil {
+		return nil, err
+	}
+
+	files, ok := r.MultipartForm.File[key]
+	if !ok {
+		return nil, http.ErrMissingFile
+	}
+
+	if len(files) > 1 {
+		return nil, errors.New("only max one file is allowed")
+	}
+
+	filehandler := files[0]
+	fileformat := filehandler.Header.Get("Content-Type")
+	if !validator.PermittedValue(fileformat, safeImgFormat...) {
+		return nil, fmt.Errorf("allowed file format %v", safeImgFormat)
+	}
+	return filehandler, nil
 }

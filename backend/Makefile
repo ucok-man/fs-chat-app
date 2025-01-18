@@ -24,9 +24,10 @@ LOG_LEVEL ?= INFO
 DB_MAX_OPEN_CONN ?= 25
 DB_MAX_IDLE_CONN ?= 25
 DB_MAX_IDLE_TIME ?= 15m
+MIGRATION_DIR ?= "migrations"
 TRUSTED_ORIGINS ?= ""
 JWT_SECRET ?="secret"
-MIGRATION_DIR ?= "migrations"
+CLOUDINARY_URL ?= ""
 
 FLAGS=\
 	--port=${PORT} \
@@ -37,7 +38,8 @@ FLAGS=\
 	--db-max-idle-conns=${DB_MAX_IDLE_CONN} \
 	--db-max-idle-time=${DB_MAX_IDLE_TIME} \
 	--cors-trusted-origins=${TRUSTED_ORIGINS} \
-	--jwt-secret=${JWT_SECRET}
+	--jwt-secret=${JWT_SECRET} \
+	--cloudinary-url=${CLOUDINARY_URL}
 
 
 ## run/dev: compile and run application in watch mode

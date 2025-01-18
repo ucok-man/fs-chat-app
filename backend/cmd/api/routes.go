@@ -18,11 +18,19 @@ func (app *application) routes() http.Handler {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/signup", app.signup)
 			r.Post("/signin", app.signin)
-			r.Post("/logout", app.logout)
 		})
 	})
 
 	// private routes
+	apiv1.Group(func(r chi.Router) {
+		r.Use(app.authenticate)
+
+		r.Post("/logout", app.logout)
+
+		r.Route("/profile", func(r chi.Router) {
+			r.Post("/upload", app.uploadProfile)
+		})
+	})
 
 	router := chi.NewRouter().With(app.recover, app.cors)
 	router.Mount("/api/v1", apiv1)

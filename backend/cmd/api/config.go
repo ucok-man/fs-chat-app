@@ -23,11 +23,14 @@ type config struct {
 	log struct {
 		level logger.Level
 	}
-	cors struct {
-		trustedOrigins []string
-	}
 	jwt struct {
 		secret string
+	}
+	cloudinary struct {
+		url string
+	}
+	cors struct {
+		trustedOrigins []string
 	}
 }
 
@@ -63,8 +66,9 @@ func configuration() (config, map[string]string) {
 		return nil
 	})
 
-	p.StringSliceVar(&cfg.cors.trustedOrigins, "cors-trusted-origins", []string{}, "Trusted CORS origins (comma separated)")
 	p.StringVar(&cfg.jwt.secret, "jwt-secret", "", "JWT token secret")
+	p.StringVar(&cfg.cloudinary.url, "cloudinary-url", "", "Cloudinary url <cloudinary://API_KEY:API_SECRET@CLOUD_NAME>")
+	p.StringSliceVar(&cfg.cors.trustedOrigins, "cors-trusted-origins", []string{}, "Trusted CORS origins (comma separated)")
 
 	p.AddGoFlagSet(g)
 	p.Parse(os.Args[1:])
@@ -86,4 +90,5 @@ func validateConfig(v *validator.Validator, cfg *config) {
 	v.Check(cfg.db.maxIdleConns > 0, "db-max-idle-conns", "must be positive number")
 	v.Check(validator.PermittedValue(cfg.log.level, logger.LevelError, logger.LevelFatal, logger.LevelInfo), "log-level", "invalid log level value")
 	v.Check(cfg.jwt.secret != "", "jwt-secret", "jwt secret key is required")
+	v.Check(cfg.cloudinary.url != "", "cloudinary-url", "cloudinary url is required")
 }

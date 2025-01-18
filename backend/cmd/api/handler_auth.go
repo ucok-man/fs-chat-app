@@ -10,7 +10,7 @@ import (
 )
 
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
-	var input dto.UserReqSignup
+	var input dto.ReqSignupDto
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.errBadRequestResponse(w, r, err)
@@ -68,7 +68,7 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) signin(w http.ResponseWriter, r *http.Request) {
-	var input dto.UserReqSignin
+	var input dto.ReqSigninDto
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.errBadRequestResponse(w, r, err)

@@ -102,7 +102,7 @@ func (l *Logger) SkipC(skip int) *Logger {
 
 func (l *Logger) Send() {
 	var pcs [1]uintptr
-	runtime.Callers(l.ctx.skipC, pcs[:])
+	runtime.Callers(2+l.ctx.skipC, pcs[:])
 	l.ctx.attrs = append(l.ctx.attrs, l.ctx.trace)
 	record := slog.NewRecord(time.Now(), l.ctx.level.Level(), l.ctx.msg, pcs[0])
 	l.logger.Handler().WithAttrs(l.ctx.attrs).Handle(context.Background(), record)

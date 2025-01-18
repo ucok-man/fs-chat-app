@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash bytea NOT NULL,
     profile_pic varchar NOT NULL DEFAULT '',
     created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now()
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    version integer NOT NULL DEFAULT 1
 );
 -- +goose StatementEnd
 

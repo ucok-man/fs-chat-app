@@ -10,7 +10,7 @@ func (app *application) logError(r *http.Request, err error) {
 		Error(err).
 		Attr("request_method", r.Method).
 		Attr("request_url", r.URL.String()).
-		SkipC(4). // it will point to the handler
+		SkipC(2). // it will point to the handler
 		Send()
 }
 
@@ -51,6 +51,11 @@ func (app *application) errFailedValidationResponse(w http.ResponseWriter, r *ht
 
 func (app *application) errInvalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
 	message := "invalid authentication credentials"
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
+func (app *application) invalidAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
+	message := "invalid or missing authentication token"
 	app.errorResponse(w, r, http.StatusUnauthorized, message)
 }
 

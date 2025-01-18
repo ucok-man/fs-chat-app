@@ -2,13 +2,13 @@ package dto
 
 import "github.com/ucok-man/fs-chat-app-backend/internal/validator"
 
-type UserReqSignup struct {
+type ReqSignupDto struct {
 	FullName string `json:"fullname"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func (dto *UserReqSignup) Validate() map[string]string {
+func (dto *ReqSignupDto) Validate() map[string]string {
 	v := validator.New()
 
 	v.Check(dto.FullName != "", "full_name", "must be provided")
